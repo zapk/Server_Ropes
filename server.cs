@@ -42,6 +42,11 @@ datablock StaticShapeData(RopeCylinder)
 	shapeFile = "./rope.dts";
 };
 
+datablock StaticShapeData(RopeCylinderNoCol)
+{
+	shapeFile = "./ropeNoCol.dts";
+};
+
 exec("./math.cs");
 exec("./ropetool.cs");
 
@@ -105,14 +110,14 @@ function _getRopeGroup(%group, %bl_id, %creationData)
 	return %new;
 }
 
-function _getNewRope(%diameter, %color, %group)
+function _getNewRope(%diameter, %color, %group, %isNoCol)
 {
 	%rope = new StaticShape()
 	{
 		position = "0 0 0";
 		rotation = "0 0 0";
 		scale = %diameter SPC %diameter SPC %diameter;
-		dataBlock = RopeCylinder;
+		dataBlock = %isNoCol ? RopeCylinderNoCol : RopeCylinder;
 		canSetIFLs = false;
 		diameter = %diameter;
 		isRope = true;
@@ -120,7 +125,8 @@ function _getNewRope(%diameter, %color, %group)
 
 	%rope.setNodeColor("ALL", getColorIDTable(%color));
 
-	%group.add(%rope);
+	if (isObject(%group))
+		%group.add(%rope);
 
 	return %rope;
 }
@@ -274,7 +280,7 @@ package RopePackage
 	{
 		Parent::onHitObject(%this, %player, %slot, %hitObj, %hitPos, %hitNormal);
 
-		if (!isObject(%player.client) || !isObject(%hitObj) || !%hitObj.isRope)
+		if (!isObject(%player.client) || !isObject(%hitObj) || !%hitObj.isRope || %hitObj.getGroup().gn $= "")
 			return;
 
 		serverPlay3D("BrickBreakSound", %hitPos);

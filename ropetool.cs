@@ -35,51 +35,94 @@ function ropeToolImage::onHitObject(%this, %player, %slot, %hitObj, %hitPos, %hi
 	{
 		%player.ropeToolPosA = %hitPos;
 		%client.updateRopeToolBP();
-		ServerPlay3D("BrickPlantSound", %hitPos);
+		ServerPlay3D("BrickRotateSound", %hitPos);
+		%client.ropeToolGhostLoop();
 		return;
 	}
+
+	ServerPlay3D("BrickPlantSound", %hitPos);
 
 	%group = _getRopeGroup(getSimTime(), %client.getBLID(), "");
 	%group.brickGroup = getBrickGroupFromObject(%client);
 
 	createRope(%player.ropeToolPosA, %hitPos, %client.currentColor, %client.ropeToolDiameter, %client.ropeToolSlack, %group);
-	%player.ropeToolPosA = "";
+	%player.ropeToolPosA = %hitPos;
+	%client.updateRopeToolBP();
 }
 
-function GameConnection::updateRopeToolBP(%this)
+function GameConnection::ropeToolGhostClear(%client)
 {
-	if (!isObject(%this.player))
+	cancel(%client.ropeToolGhostLoop);
+
+	if (!isObject(%player = %client.player))
 		return;
 
-	%colHex = rgbToHex(getColorIDTable(%this.currentColor));
+	if (isObject(%player.ropeToolGhost))
+		%player.ropeToolGhost.delete();
+}
 
-	%tut = (%this.player.ropeToolPosA $= "") ? "Click somewhere to set the first point" : "Now click another point to create a rope";
+function GameConnection::ropeToolGhostLoop(%client)
+{
+	cancel(%client.ropeToolGhostLoop);
+
+	if (!isObject(%player = %client.player) || %player.ropeToolPosA $= "")
+		return;
+
+	if (!isObject(%player.ropeToolGhost))
+		%player.ropeToolGhost = _getNewRope(%client.ropeToolDiameter, %client.currentColor, "", true);
+	else
+		%player.ropeToolGhost.diameter = %client.ropeToolDiameter;
+
+	_aimRope(%player.ropeToolGhost, %player.ropeToolPosA, %player.getMuzzlePoint(0));
+
+	%client.ropeToolGhostLoop = %client.schedule(1, "ropeToolGhostLoop");
+}
+
+function GameConnection::ropeToolCleanup(%client)
+{
+	commandToClient(%client, 'clearBottomPrint');
+	%client.ropeToolGhostClear();
+
+	if (!isObject(%player = %client.player))
+		return;
+
+	%player.ropeToolAuthed = false;
+}
+
+function GameConnection::updateRopeToolBP(%client)
+{
+	if (!isObject(%client.player))
+		return;
+
+	%colHex = rgbToHex(getColorIDTable(%client.currentColor));
+
+	%tut = (%client.player.ropeToolPosA $= "") ? "Click somewhere to set the first point" : "Now click another point to create a rope";
 
 	%msg = "<font:Arial:22>\c6Rope Tool\n";
-	%msg = %msg @ "<font:Verdana:16>\c6Slack: \c3" @ %this.ropeToolSlack @ " \c6[Shift Fwd/Back]<just:right>\c6" @ %tut @ " \n<just:left>";
-	%msg = %msg @ "\c6Diameter: \c3" @ %this.ropeToolDiameter @ " \c6[Shift Left/Right]\n";
+	%msg = %msg @ "<font:Verdana:16>\c6Slack: \c3" @ %client.ropeToolSlack @ " \c6[Shift Fwd/Back]<just:right>\c6" @ %tut @ " \n<just:left>";
+	%msg = %msg @ "\c6Diameter: \c3" @ %client.ropeToolDiameter @ " \c6[Shift Left/Right]\n";
 	%msg = %msg @ "\c6Color: <font:impact:20><color:" @ %colHex @ ">|||||<font:Verdana:16> \c6[Paint Color]\n";
 
-	commandToClient(%this, 'BottomPrint', %msg, 0, true);
+	commandToClient(%client, 'BottomPrint', %msg, 0, true);
 }
 
-function serverCmdRopeTool(%this)
+function serverCmdRopeTool(%client)
 {
-	if ($Pref::Ropes::ToolAdminOnly && !%this.isAdmin)
+	if ($Pref::Ropes::ToolAdminOnly && !%client.isAdmin)
 	{
-		messageClient(%this, '', "\c6The rope tool is admin only. Ask an admin for help.");
+		messageClient(%client, '', "\c6The rope tool is admin only. Ask an admin for help.");
 		return;
 	}
 
-	if (isObject(%this.minigame) && !%this.minigame.enablebuilding)
+	if (isObject(%client.minigame) && !%client.minigame.enablebuilding)
 	{
-		messageClient(%this, '', "\c6You cannot use the rope tool while building is disabled in your minigame.");
+		messageClient(%client, '', "\c6You cannot use the rope tool while building is disabled in your minigame.");
 		return;
 	}
 
-	if (!isObject(%player = %this.player))
+	if (!isObject(%player = %client.player))
 	{
-		messageClient(%this, '', "\c6You must be spawned to equip the rope tool.");
+		messageClient(%client, '', "\c6You must be spawned to equip the rope tool.");
 		return;
 	}
 
@@ -118,44 +161,61 @@ package RopeToolPackage
 
 	function ropeToolImage::onUnMount(%this, %obj, %slot)
 	{
-		commandToClient(%obj.client, 'clearBottomPrint');
-		%obj.ropeToolAuthed = false;
+		if (%obj.client) %obj.client.ropeToolCleanup();
 		Parent::onUnMount(%this, %obj, %slot);
 	}
 
-	function GameConnection::onDeath(%this, %sourceObject, %sourceClient, %damageType, %damLoc)
+	function GameConnection::onDeath(%client, %sourceObject, %sourceClient, %damageType, %damLoc)
 	{
-		commandToClient(%this, 'clearBottomPrint');
-		Parent::onDeath(%this, %sourceObject, %sourceClient, %damageType, %damLoc);
+		%client.ropeToolCleanup();
+		Parent::onDeath(%client, %sourceObject, %sourceClient, %damageType, %damLoc);
 	}
 
-	function serverCmdShiftBrick(%this, %x, %y, %z)
+	function serverCmdShiftBrick(%client, %x, %y, %z)
 	{
-		if (!isObject(%player = %this.player) || !%player.ropeToolAuthed)
+		if (!isObject(%player = %client.player) || !%player.ropeToolAuthed)
 		{
-			return Parent::serverCmdShiftBrick(%this, %x, %y, %z);
+			return Parent::serverCmdShiftBrick(%client, %x, %y, %z);
 		}
 
 		if (%x > 0) {
-			%this.ropeToolSlack = mClampF(%this.ropeToolSlack + 1, 0, 50);
+			%client.ropeToolSlack = mClampF(%client.ropeToolSlack + 1, 0, 50);
 		} else if (%x < 0) {
-			%this.ropeToolSlack = mClampF(%this.ropeToolSlack - 1, 0, 50);
+			%client.ropeToolSlack = mClampF(%client.ropeToolSlack - 1, 0, 50);
 		} else if (%y > 0) {
-			%this.ropeToolDiameter = mClampF(%this.ropeToolDiameter - 0.1, 0.1, 1.0);
+			%client.ropeToolDiameter = mClampF(%client.ropeToolDiameter - 0.05, 0.05, 2.0);
 		} else if (%y < 0) {
-			%this.ropeToolDiameter = mClampF(%this.ropeToolDiameter + 0.1, 0.1, 1.0);
+			%client.ropeToolDiameter = mClampF(%client.ropeToolDiameter + 0.05, 0.05, 2.0);
 		}
 
-		%this.updateRopeToolBP();
+		%client.updateRopeToolBP();
 	}
 
-	function serverCmdRopeToo(%this) { serverCmdRopeTool(%this); }
-	function serverCmdRopeTo (%this) { serverCmdRopeTool(%this); }
-	function serverCmdRopeT  (%this) { serverCmdRopeTool(%this); }
-	function serverCmdRope   (%this) { serverCmdRopeTool(%this); }
-	function serverCmdRop    (%this) { serverCmdRopeTool(%this); }
-	function serverCmdRo     (%this) { serverCmdRopeTool(%this); }
-	function serverCmdR      (%this) { serverCmdRopeTool(%this); }
+	function serverCmdRopeToo(%client) { serverCmdRopeTool(%client); }
+	function serverCmdRopeTo (%client) { serverCmdRopeTool(%client); }
+	function serverCmdRopeT  (%client) { serverCmdRopeTool(%client); }
+	function serverCmdRope   (%client) { serverCmdRopeTool(%client); }
+	function serverCmdRop    (%client) { serverCmdRopeTool(%client); }
+	function serverCmdRo     (%client) { serverCmdRopeTool(%client); }
+	function serverCmdR      (%client) { serverCmdRopeTool(%client); }
+
+	function GameConnection::onClientLeaveGame(%client)
+	{
+		%client.ropeToolCleanup();
+		Parent::onClientLeaveGame(%client);
+	}
+
+	function serverCmdLight(%client)
+	{
+		if (isObject(%player = %client.player) && %player.ropeToolAuthed)
+		{
+			%player.ropeToolPosA = "";
+			%client.updateRopeToolBP();
+			%client.ropeToolGhostClear();
+			return;
+		}
+		Parent::serverCmdLight(%client);
+	}
 };
 
 activatePackage(RopeToolPackage);
