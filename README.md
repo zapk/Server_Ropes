@@ -3,6 +3,13 @@
 
 Aesthetic ropes for [Blockland](http://blockland.us/).
 
+## Installation
+Download Server_Ropes.zip from the [latest release](https://github.com/zapk/Server_Ropes/releases) and put it in Blockland\\Add-Ons.
+
+#### Disclaimer
+
+**Do not** straight-up download the repository unless you know what you're doing as it's most likely partly or mostly broken.
+
 ## Wrench Events
 - **ropeToBricks**
 	-	`[brick names]` `[colour]` `[diameter]` `[slack]`
