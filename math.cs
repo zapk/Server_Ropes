@@ -37,7 +37,7 @@ function _aimRope(%rope, %posA, %posB)
 	if(!isObject(%rope) || %posA $= "" || %posB $= "")
 	{
 		return;
-  	}
+  }
 
 	%rope.setTransform( %posA );
 
