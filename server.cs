@@ -105,7 +105,7 @@ function _getRopeGroup(%group, %bl_id, %creationData)
 	return %new;
 }
 
-function getNewRope(%diameter, %color, %group)
+function _getNewRope(%diameter, %color, %group)
 {
 	%rope = new StaticShape()
 	{
@@ -132,7 +132,7 @@ function createRope(%posA, %posB, %color, %diameter, %slack, %group)
 
 	if(%slack < 0.01 && %slack > -0.01)
 	{
-		%rope = getNewRope( mClampF( %diameter, 0, 1 ), %color, %group );
+		%rope = _getNewRope( mClampF( %diameter, 0, 1 ), %color, %group );
 
 		_aimRope( %rope, %posA, %posB );
 		return;
@@ -148,7 +148,7 @@ function createRope(%posA, %posB, %color, %diameter, %slack, %group)
 		%subPosA = solveRopeDrop( %posA, %vec, %dist, %i, %slack, %diameter );
 		%subPosB = solveRopeDrop( %posA, %vec, %dist, %j, %slack, %diameter );
 
-		%rope = getNewRope( %diameter, %color, %group );
+		%rope = _getNewRope( %diameter, %color, %group );
 
 		_aimRope( %rope, %subPosA, %subPosB );
 	}
