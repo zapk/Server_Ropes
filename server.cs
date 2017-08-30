@@ -39,12 +39,12 @@ RTB_registerPref("Rope Tool Admin Only", "Ropes", "Pref::Ropes::ToolAdminOnly", 
 
 datablock StaticShapeData(RopeCylinder)
 {
-	shapeFile = "./rope.dts";
+	shapeFile = "./res/rope.dts";
 };
 
 datablock StaticShapeData(RopeCylinderNoCol)
 {
-	shapeFile = "./ropeNoCol.dts";
+	shapeFile = "./res/ropeNoCol.dts";
 };
 
 exec("./math.cs");
