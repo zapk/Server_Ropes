@@ -89,7 +89,7 @@ function axisToEuler(%axis)
 	return mRadToDeg( mAsin( %m23 ) ) SPC mRadToDeg( mAtan( -%m13, %m33 ) ) SPC mRadToDeg( mAtan( -%m21, %m22 ) );
 }
 
-function aim(%rope, %posA, %posB)
+function _aimRope(%rope, %posA, %posB)
 {
 	if(!isObject(%rope) || %posA $= "" || %posB $= "")
 	{
@@ -232,7 +232,7 @@ function createRope(%posA, %posB, %color, %diameter, %slack, %group)
 	{
 		%rope = getNewRope( mClampF( %diameter, 0, 1 ), %color, %group );
 
-		aim( %rope, %posA, %posB );
+		_aimRope( %rope, %posA, %posB );
 		return;
 	}
 
@@ -248,7 +248,7 @@ function createRope(%posA, %posB, %color, %diameter, %slack, %group)
 
 		%rope = getNewRope( %diameter, %color, %group );
 
-		aim( %rope, %subPosA, %subPosB );
+		_aimRope( %rope, %subPosA, %subPosB );
 	}
 }
 
