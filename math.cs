@@ -85,3 +85,23 @@ function solveRopeDrop(%posA, %vec, %dist, %iter, %slack, %diameter)
 
 	return %endPos;
 }
+
+function rgbToHex( %rgb )
+{
+	%r = _compToHex( 255 * getWord( %rgb, 0 ) );
+	%g = _compToHex( 255 * getWord( %rgb, 1 ) );
+	%b = _compToHex( 255 * getWord( %rgb, 2 ) );
+
+	return %r @ %g @ %b;
+}
+
+function _compToHex( %comp )
+{
+	%left = mFloor( %comp / 16 );
+	%comp = mFloor( %comp - %left * 16 );
+
+	%left = getSubStr( "0123456789ABCDEF", %left, 1 );
+	%comp = getSubStr( "0123456789ABCDEF", %comp, 1 );
+
+	return %left @ %comp;
+}
