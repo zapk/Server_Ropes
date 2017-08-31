@@ -127,6 +127,8 @@ function _getNewRope(%diameter, %color, %group, %isNoCol)
 
 	if (isObject(%group))
 		%group.add(%rope);
+	else
+		MissionCleanup.add(%rope);
 
 	return %rope;
 }
@@ -151,8 +153,8 @@ function createRope(%posA, %posB, %color, %diameter, %slack, %group)
 	{
 		%j = %i + 1;
 
-		%subPosA = solveRopeDrop( %posA, %vec, %dist, %i, %slack, %diameter );
-		%subPosB = solveRopeDrop( %posA, %vec, %dist, %j, %slack, %diameter );
+		%subPosA = solveRopeDrop( %posA, %vec, %dist, %i, %slack, %diameter, $Pref::Ropes::Iterations );
+		%subPosB = solveRopeDrop( %posA, %vec, %dist, %j, %slack, %diameter, $Pref::Ropes::Iterations );
 
 		%rope = _getNewRope( %diameter, %color, %group );
 

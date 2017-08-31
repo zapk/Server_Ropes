@@ -70,10 +70,10 @@ function _aimRope(%rope, %posA, %posB)
 	%rope.setScale( %rope.diameter SPC %dist SPC %rope.diameter );
 }
 
-function solveRopeDrop(%posA, %vec, %dist, %iter, %slack, %diameter)
+function solveRopeDrop(%posA, %vec, %dist, %iter, %slack, %diameter, %Iterations)
 {
-	%rawPos = vectorAdd( %posA, vectorScale( %vec, %dist * (%iter / $Pref::Ropes::Iterations) ) );
-	%endPos = vectorSub( %rawPos, 0 SPC 0 SPC ( mSin(($pi / $Pref::Ropes::Iterations) * %iter) * %slack ) );
+	%rawPos = vectorAdd( %posA, vectorScale( %vec, %dist * (%iter / %iterations) ) );
+	%endPos = vectorSub( %rawPos, 0 SPC 0 SPC ( mSin(($pi / %iterations) * %iter) * %slack ) );
 
 	%ray = containerRaycast( %rawPos, %endPos, $Typemasks::FxBrickObjectType | $Typemasks::TerrainObjectType );
 	%hit = firstWord( %ray );

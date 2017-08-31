@@ -20,6 +20,7 @@ function ropeToolImage::onStopFire(%this, %player, %slot) { return hammerImage::
 
 function ropeToolImage::onHitObject(%this, %player, %slot, %hitObj, %hitPos, %hitNormal)
 {
+	%hitPos = VectorAdd(%hitPos, VectorScale(%hitNormal, 0.01));
 	if (!%player.ropeToolAuthed)
 	{
 		ServerPlay3D("ErrorSound", %hitPos);
@@ -48,6 +49,8 @@ function ropeToolImage::onHitObject(%this, %player, %slot, %hitObj, %hitPos, %hi
 	createRope(%player.ropeToolPosA, %hitPos, %client.currentColor, %client.ropeToolDiameter, %client.ropeToolSlack, %group);
 	%player.ropeToolPosA = %hitPos;
 	%client.updateRopeToolBP();
+
+	%client.undoStack.push(%group.getID() TAB "ROPETOOL");
 }
 
 function GameConnection::ropeToolGhostClear(%client)
@@ -59,6 +62,12 @@ function GameConnection::ropeToolGhostClear(%client)
 
 	if (isObject(%player.ropeToolGhost))
 		%player.ropeToolGhost.delete();
+
+	for(%i = 0; %i < 4; %i++)
+	{
+		if (isObject(%player.ropeToolGhost[%i]))
+			%player.ropeToolGhost[%i].delete();
+	}
 }
 
 function GameConnection::ropeToolGhostLoop(%client)
@@ -68,14 +77,28 @@ function GameConnection::ropeToolGhostLoop(%client)
 	if (!isObject(%player = %client.player) || %player.ropeToolPosA $= "")
 		return;
 
-	if (!isObject(%player.ropeToolGhost))
-		%player.ropeToolGhost = _getNewRope(%client.ropeToolDiameter, %client.currentColor, "", true);
-	else
-		%player.ropeToolGhost.diameter = %client.ropeToolDiameter;
+	%posA = %player.ropeToolPosA;
+	%posB = VectorAdd(%player.getMuzzlePoint(0), "0 0 0.3");
 
-	_aimRope(%player.ropeToolGhost, %player.ropeToolPosA, %player.getMuzzlePoint(0));
+	%vec = vectorNormalize( vectorSub(%posB, %posA) );
+	%dist = vectorDist( %posB, %posA );
 
-	%client.ropeToolGhostLoop = %client.schedule(1, "ropeToolGhostLoop");
+	for(%i = 0; %i < 4; %i++)
+	{
+		%j = %i + 1;
+
+		%subPosA = solveRopeDrop( %posA, %vec, %dist, %i, %client.ropeToolSlack, %client.ropeToolDiameter, 4 );
+		%subPosB = solveRopeDrop( %posA, %vec, %dist, %j, %client.ropeToolSlack, %client.ropeToolDiameter, 4 );
+
+		if (!isObject(%player.ropeToolGhost[%i]))
+			%player.ropeToolGhost[%i] = _getNewRope( %client.ropeToolDiameter, %client.currentColor, "", true );
+		else
+			%player.ropeToolGhost[%i].diameter = %client.ropeToolDiameter;
+
+		_aimRope( %player.ropeToolGhost[%i], %subPosA, %subPosB );
+	}
+
+	%client.ropeToolGhostLoop = %client.schedule(16, "ropeToolGhostLoop");
 }
 
 function GameConnection::ropeToolCleanup(%client)
@@ -179,9 +202,9 @@ package RopeToolPackage
 		}
 
 		if (%x > 0) {
-			%client.ropeToolSlack = mClampF(%client.ropeToolSlack + 1, 0, 50);
+			%client.ropeToolSlack = mClampF(%client.ropeToolSlack + 0.5, 0, 50);
 		} else if (%x < 0) {
-			%client.ropeToolSlack = mClampF(%client.ropeToolSlack - 1, 0, 50);
+			%client.ropeToolSlack = mClampF(%client.ropeToolSlack - 0.5, 0, 50);
 		} else if (%y > 0) {
 			%client.ropeToolDiameter = mClampF(%client.ropeToolDiameter - 0.05, 0.05, 2.0);
 		} else if (%y < 0) {
@@ -189,6 +212,16 @@ package RopeToolPackage
 		}
 
 		%client.updateRopeToolBP();
+	}
+
+	function serverCmdSuperShiftBrick(%client, %x, %y, %z)
+	{
+		if (!isObject(%player = %client.player) || !%player.ropeToolAuthed)
+		{
+			return Parent::serverCmdShiftBrick(%client, %x, %y, %z);
+		}
+
+		serverCmdShiftBrick(%client, %x, %y, %z);
 	}
 
 	function serverCmdRopeToo(%client) { serverCmdRopeTool(%client); }
@@ -215,6 +248,34 @@ package RopeToolPackage
 			return;
 		}
 		Parent::serverCmdLight(%client);
+	}
+
+	function serverCmdUndoBrick(%client)
+	{
+		%state = %client.undoStack.pop();
+		%type = getField(%state, 1);
+
+		if (%type $= "ROPETOOL")
+		{
+			%group = getField(%state, 0);
+
+			if (isObject(%group))
+			{
+				if (isObject(%player = %client.player))
+				%player.playThread(3, "undo");
+
+				for (%i = 0; %i < %group.getCount(); %i++)
+				{
+					serverPlay3D("BrickBreakSound", %group.getObject(%i).getPosition());
+				}
+				%group.delete();
+			}
+
+			return;
+		}
+
+		%client.undoStack.push(%state);
+		Parent::serverCmdUndoBrick(%client);
 	}
 };
 
