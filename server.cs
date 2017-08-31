@@ -48,7 +48,9 @@ datablock StaticShapeData(RopeCylinderNoCol)
 };
 
 exec("./math.cs");
+exec("./manager.cs");
 exec("./ropetool.cs");
+exec("./commands.cs");
 
 function clearRopes(%bl_id)
 {
@@ -56,17 +58,14 @@ function clearRopes(%bl_id)
 
 	%useID = (%bl_id !$= "");
 
-	if(isObject(MainRopeGroup) && MainRopeGroup.getCount())
+	for(%i = MainRopeGroup.getCount() - 1; %i >= 0; %i--)
 	{
-		for(%i = MainRopeGroup.getCount() - 1; %i >= 0; %i--)
-		{
-			%rg = MainRopeGroup.getObject(%i);
+		%rg = MainRopeGroup.getObject(%i);
 
-			if(!%useID || %rg.bl_id $= %bl_id)
-			{
-				%c++;
-				%rg.delete();
-			}
+		if(!%useID || %rg.bl_id $= %bl_id)
+		{
+			%c++;
+			%rg.delete();
 		}
 	}
 
@@ -162,26 +161,6 @@ function createRope(%posA, %posB, %color, %diameter, %slack, %group)
 	}
 }
 
-function serverCmdClearAllRopes(%this)
-{
-	if(!%this.isAdmin)
-		return;
-
-	%ropes = clearRopes();
-
-	messageAll('MsgClearBricks', '\c3%1 \c0cleared all ropes. (%2)', %this.getPlayerName(), %ropes);
-}
-
-function serverCmdClearRopes(%this)
-{
-	%ropes = clearRopes(%this.bl_id);
-
-	if(%ropes)
-	{
-		messageAll('MsgClearBricks', '\c3%1 \c2cleared \c3%1\c2\'s ropes (%2)', %this.getPlayerName(), %ropes);
-	}
-}
-
 registerOutputEvent("fxDTSBrick", "ropeClearAll");
 
 function fxDTSBrick::ropeClearAll(%this)
@@ -262,14 +241,9 @@ package RopePackage
 		if (!isObject(%player.client) || !isObject(%hitObj) || !%hitObj.isRope)
 			return;
 
-		%brickGroup = %hitObj.getGroup().brickGroup;
-
-		if (!isObject(%brickGroup))
-			return;
-
-		if (getTrustLevel(%player, %brickGroup) < $TrustLevel::Wand)
+		if (%player.client.getBLID() !$= (%bl_id = %hitObj.getGroup().bl_id))
 		{
-			commandToClient(%player.client, 'CenterPrint', %brickGroup.name @ " does not trust you enough to do that", 1);
+			commandToClient(%player.client, 'CenterPrint', "\c1BL_ID " @ %bl_id @ "\c0 does not trust you enough to do that", 1);
 		}
 		else
 		{

@@ -47,6 +47,14 @@ function ropeToolImage::onHitObject(%this, %player, %slot, %hitObj, %hitPos, %hi
 	%group.brickGroup = getBrickGroupFromObject(%client);
 
 	createRope(%player.ropeToolPosA, %hitPos, %client.currentColor, %client.ropeToolDiameter, %client.ropeToolSlack, %group);
+
+	%group.madeFromTool = true;
+	%group.savePosA = %player.ropeToolPosA;
+	%group.savePosB = %hitPos;
+	%group.saveColor = %client.currentColor;
+	%group.saveDiameter = %client.ropeToolDiameter;
+	%group.saveSlack = %client.ropeToolSlack;
+
 	%player.ropeToolPosA = %hitPos;
 	%client.updateRopeToolBP();
 
@@ -127,30 +135,6 @@ function GameConnection::updateRopeToolBP(%client)
 	%msg = %msg @ "\c6Color: <font:impact:20><color:" @ %colHex @ ">|||||<font:Verdana:16> \c6[Paint Color]\n";
 
 	commandToClient(%client, 'BottomPrint', %msg, 0, true);
-}
-
-function serverCmdRopeTool(%client)
-{
-	if ($Pref::Ropes::ToolAdminOnly && !%client.isAdmin)
-	{
-		messageClient(%client, '', "\c6The rope tool is admin only. Ask an admin for help.");
-		return;
-	}
-
-	if (isObject(%client.minigame) && !%client.minigame.enablebuilding)
-	{
-		messageClient(%client, '', "\c6You cannot use the rope tool while building is disabled in your minigame.");
-		return;
-	}
-
-	if (!isObject(%player = %client.player))
-	{
-		messageClient(%client, '', "\c6You must be spawned to equip the rope tool.");
-		return;
-	}
-
-	%player.updateArm(ropeToolImage);
-	%player.mountImage(ropeToolImage, 0);
 }
 
 if (isPackage(RopeToolPackage))
