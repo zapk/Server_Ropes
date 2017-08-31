@@ -1,7 +1,7 @@
 function serverCmdRopeHelp(%client)
 {
 	messageClient(%client, '', "\c6/clearAllRopes, /clearRopes, /ropeTool, /saveRopes, /loadRopes, /listRopeSaves");
-	messageClient(%client, '', "\c6README: <a:github.com/zapk/Server_Ropes>github.com/zapk/Server_Ropes</a>.");
+	messageClient(%client, '', "\c6README: <a:github.com/zapk/Server_Ropes>github.com/zapk/Server_Ropes</a>\c6.");
 }
 
 function serverCmdClearAllRopes(%client)
