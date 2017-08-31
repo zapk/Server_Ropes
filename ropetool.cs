@@ -206,7 +206,7 @@ package RopeToolPackage
 	{
 		if (!isObject(%player = %client.player) || !%player.ropeToolAuthed)
 		{
-			return Parent::serverCmdShiftBrick(%client, %x, %y, %z);
+			return Parent::serverCmdSuperShiftBrick(%client, %x, %y, %z);
 		}
 
 		serverCmdShiftBrick(%client, %x, %y, %z);
