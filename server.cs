@@ -134,12 +134,9 @@ function _getNewRope(%diameter, %color, %group, %isNoCol)
 
 function createRope(%posA, %posB, %color, %diameter, %slack, %group)
 {
-	%diameter = mClampF( %diameter, 0.1, 1 );
-	%slack = mClampF( %slack, 0, 50 );
-
 	if(%slack < 0.01 && %slack > -0.01)
 	{
-		%rope = _getNewRope( mClampF( %diameter, 0, 1 ), %color, %group );
+		%rope = _getNewRope( %diameter, %color, %group );
 
 		_aimRope( %rope, %posA, %posB );
 		return;

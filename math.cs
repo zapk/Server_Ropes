@@ -73,14 +73,14 @@ function _aimRope(%rope, %posA, %posB)
 function solveRopeDrop(%posA, %vec, %dist, %iter, %slack, %diameter, %Iterations)
 {
 	%rawPos = vectorAdd( %posA, vectorScale( %vec, %dist * (%iter / %iterations) ) );
-	%endPos = vectorSub( %rawPos, 0 SPC 0 SPC ( mSin(($pi / %iterations) * %iter) * %slack ) );
+	%endPos = vectorSub( %rawPos, VectorScale( "0 0 1", mSin(($pi / %iterations) * %iter) * %slack ) );
 
-	%ray = containerRaycast( %rawPos, %endPos, $Typemasks::FxBrickObjectType | $Typemasks::TerrainObjectType );
+	%ray = containerRaycast( %rawPos, VectorSub( %endPos, VectorScale( "0 0 1", %diameter / 2 ) ), $Typemasks::FxBrickObjectType | $Typemasks::TerrainObjectType );
 	%hit = firstWord( %ray );
 
 	if(isObject(%hit))
 	{
-		%endPos = VectorAdd( getWords(%ray, 1, 3), "0 0 " @ %diameter / 2 );
+		%endPos = VectorAdd( getWords(%ray, 1, 3), VectorScale( getWords(%ray, 4, 6), %diameter / 2 ) );
 	}
 
 	return %endPos;

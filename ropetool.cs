@@ -20,7 +20,6 @@ function ropeToolImage::onStopFire(%this, %player, %slot) { return hammerImage::
 
 function ropeToolImage::onHitObject(%this, %player, %slot, %hitObj, %hitPos, %hitNormal)
 {
-	%hitPos = VectorAdd(%hitPos, VectorScale(%hitNormal, 0.01));
 	if (!%player.ropeToolAuthed)
 	{
 		ServerPlay3D("ErrorSound", %hitPos);
@@ -35,6 +34,7 @@ function ropeToolImage::onHitObject(%this, %player, %slot, %hitObj, %hitPos, %hi
 	if (%player.ropeToolPosA $= "")
 	{
 		%player.ropeToolPosA = %hitPos;
+		%player.ropeToolPosANorm = %hitNormal;
 		%client.updateRopeToolBP();
 		ServerPlay3D("BrickRotateSound", %hitPos);
 		%client.ropeToolGhostLoop();
@@ -46,16 +46,20 @@ function ropeToolImage::onHitObject(%this, %player, %slot, %hitObj, %hitPos, %hi
 	%group = _getRopeGroup(getSimTime(), %client.getBLID(), "");
 	%group.brickGroup = getBrickGroupFromObject(%client);
 
-	createRope(%player.ropeToolPosA, %hitPos, %client.currentColor, %client.ropeToolDiameter, %client.ropeToolSlack, %group);
+	%posA = VectorAdd( %player.ropeToolPosA, VectorScale( %player.ropeToolPosANorm, %client.ropeToolDiameter / 2 ) );
+	%posB = VectorAdd( %hitPos, VectorScale( %hitNormal, %client.ropeToolDiameter / 2 ) );
+
+	createRope(%posA, %posB, %client.currentColor, %client.ropeToolDiameter, %client.ropeToolSlack, %group);
 
 	%group.madeFromTool = true;
-	%group.savePosA = %player.ropeToolPosA;
-	%group.savePosB = %hitPos;
+	%group.savePosA = %posA;
+	%group.savePosB = %posB;
 	%group.saveColor = %client.currentColor;
 	%group.saveDiameter = %client.ropeToolDiameter;
 	%group.saveSlack = %client.ropeToolSlack;
 
 	%player.ropeToolPosA = %hitPos;
+	%player.ropeToolPosANorm = %hitNormal;
 	%client.updateRopeToolBP();
 
 	%client.undoStack.push(%group.getID() TAB "ROPETOOL");
@@ -85,8 +89,8 @@ function GameConnection::ropeToolGhostLoop(%client)
 	if (!isObject(%player = %client.player) || %player.ropeToolPosA $= "")
 		return;
 
-	%posA = %player.ropeToolPosA;
-	%posB = VectorAdd(%player.getMuzzlePoint(0), "0 0 0.3");
+	%posA = VectorAdd( %player.ropeToolPosA, VectorScale( %player.ropeToolPosANorm, %client.ropeToolDiameter / 2 ) );
+	%posB = %player.getHackPosition();
 
 	%vec = vectorNormalize( vectorSub(%posB, %posA) );
 	%dist = vectorDist( %posB, %posA );
@@ -130,8 +134,8 @@ function GameConnection::updateRopeToolBP(%client)
 	%tut = (%client.player.ropeToolPosA $= "") ? "Click somewhere to set the first point" : "Now click another point to create a rope";
 
 	%msg = "<font:Arial:22>\c6Rope Tool\n";
-	%msg = %msg @ "<font:Verdana:16>\c6Slack: \c3" @ %client.ropeToolSlack @ " \c6[Shift Fwd/Back]<just:right>\c6" @ %tut @ " \n<just:left>";
-	%msg = %msg @ "\c6Diameter: \c3" @ %client.ropeToolDiameter @ " \c6[Shift Left/Right]\n";
+	%msg = %msg @ "<font:Verdana:16>\c6Slack: \c3" @ %client.ropeToolSlack @ " \c6[Brick Fwd/Back]<just:right>\c6" @ %tut @ " \n<just:left>";
+	%msg = %msg @ "\c6Diameter: \c3" @ %client.ropeToolDiameter @ " \c6[Brick Left/Right]\n";
 	%msg = %msg @ "\c6Color: <font:impact:20><color:" @ %colHex @ ">|||||<font:Verdana:16> \c6[Paint Color]\n";
 
 	commandToClient(%client, 'BottomPrint', %msg, 0, true);
