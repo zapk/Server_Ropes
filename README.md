@@ -41,6 +41,8 @@ Download Server_Ropes.zip from the [latest release](https://github.com/zapk/Serv
 	-	Number of shapes to make up ropes with > 0 slack
 - **Rope Tool Admin Only**
 	-	Whether or not only admins should have access to the Rope Tool.
+- **Max Ropes for Non-Admins**
+	-	Max amount of ropes players can create with the Rope Tool.
 
 ## Media
 [![Video](https://i.imgur.com/th9viQK.png)](https://www.youtube.com/watch?v=ul0RnL0D1xs)
