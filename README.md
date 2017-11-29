@@ -44,8 +44,9 @@ Download Server_Ropes.zip from the [latest release](https://github.com/zapk/Serv
 
 ## Media
 [![Video](https://i.imgur.com/th9viQK.png)](https://www.youtube.com/watch?v=ul0RnL0D1xs)
-![Two Ropes](http://i.imgur.com/LRZ0rW9.png)
-![Rope Collision](http://i.imgur.com/3SNuWIw.png)
+![Many Ropes](https://i.imgur.com/m4mXstz.png)
+![Cool Patterns](https://i.imgur.com/87ChrXG.jpg)
+![One Big ol' Rope](https://i.imgur.com/Vm6ngUD.png)
 
 ## Scripting API
 - **loadTooledRopes**("path/to/file.blr");
