@@ -16,17 +16,15 @@ function serverCmdClearAllRopes(%client)
 
 function serverCmdClearRopes(%client)
 {
-	%ropes = clearRopes(%client.bl_id);
+	%ropes = clearRopes(%client.getBLID());
 
 	if(%ropes)
-	{
 		messageAll('MsgClearBricks', '\c3%1 \c2cleared \c3%1\c2\'s ropes (%2)', %client.getPlayerName(), %ropes);
-	}
 }
 
 function serverCmdRopeTool(%client)
 {
-	if ($Pref::Ropes::ToolAdminOnly && !%client.isAdmin)
+	if ($Pref::Server::Ropes::ToolAdminOnly && !%client.isAdmin)
 	{
 		messageClient(%client, '', "\c6The rope tool is admin only. Ask an admin for help.");
 		return;

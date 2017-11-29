@@ -21,7 +21,7 @@
 //         \|___|                                                                     \/____/                  \/____/
 //
 // Author:		Zapk
-// Version:		2.0.0 (November 2015)
+// Version:		3.0.0 (November 2017)
 // URL:				https://github.com/zapk/Server_Ropes
 
 if(!isObject(MainRopeGroup))
@@ -34,8 +34,9 @@ if(isFile("Add-Ons/System_ReturnToBlockland/server.cs") && !$RTB::Hooks::ServerC
 	exec("Add-Ons/System_ReturnToBlockland/hooks/serverControl.cs");
 }
 
-RTB_registerPref("Slacked Rope Shapes", "Ropes", "Pref::Ropes::Iterations", "int 1 40", "Server_Ropes", 20, 0, 0);
-RTB_registerPref("Rope Tool Admin Only", "Ropes", "Pref::Ropes::ToolAdminOnly", "bool", "Server_Ropes", true, 0, 0);
+RTB_registerPref("Slacked Rope Shapes", "Ropes", "Pref::Server::Ropes::Iterations", "int 1 40", "Server_Ropes", 20, 0, 0);
+RTB_registerPref("Rope Tool Admin Only", "Ropes", "Pref::Server::Ropes::ToolAdminOnly", "bool", "Server_Ropes", true, 0, 0);
+RTB_registerPref("Max Ropes for Non-Admins", "Ropes", "Pref::Server::Ropes::MaxPlayerRopes", "int 1 1000", "Server_Ropes", 64, 0, 0);
 
 datablock StaticShapeData(RopeCylinder)
 {
@@ -67,6 +68,23 @@ function clearRopes(%bl_id)
 			%c++;
 			%rg.delete();
 		}
+	}
+
+	return mFloor(%c);
+}
+
+function getRopeCount(%bl_id)
+{
+	%c = 0;
+
+	%useID = (%bl_id !$= "");
+
+	for(%i = MainRopeGroup.getCount() - 1; %i >= 0; %i--)
+	{
+		%rg = MainRopeGroup.getObject(%i);
+
+		if(!%useID || %rg.bl_id $= %bl_id)
+			%c++;
 	}
 
 	return mFloor(%c);
@@ -145,12 +163,12 @@ function createRope(%posA, %posB, %color, %diameter, %slack, %group)
 	%vec = vectorNormalize( vectorSub(%posB, %posA) );
 	%dist = vectorDist( %posB, %posA );
 
-	for(%i = 0; %i < $Pref::Ropes::Iterations; %i++)
+	for(%i = 0; %i < $Pref::Server::Ropes::Iterations; %i++)
 	{
 		%j = %i + 1;
 
-		%subPosA = solveRopeDrop( %posA, %vec, %dist, %i, %slack, %diameter, $Pref::Ropes::Iterations );
-		%subPosB = solveRopeDrop( %posA, %vec, %dist, %j, %slack, %diameter, $Pref::Ropes::Iterations );
+		%subPosA = solveRopeDrop( %posA, %vec, %dist, %i, %slack, %diameter, $Pref::Server::Ropes::Iterations );
+		%subPosB = solveRopeDrop( %posA, %vec, %dist, %j, %slack, %diameter, $Pref::Server::Ropes::Iterations );
 
 		%rope = _getNewRope( %diameter, %color, %group );
 

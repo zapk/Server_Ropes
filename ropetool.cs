@@ -26,10 +26,20 @@ function ropeToolImage::onHitObject(%this, %player, %slot, %hitObj, %hitPos, %hi
 		return;
 	}
 
-	ServerPlay3D("BrickMoveSound", %hitPos);
-
 	if (!isObject(%client = %player.client))
 		return;
+
+	if (getRopeCount(%client.getBLID()) >= $Pref::Server::Ropes::MaxPlayerRopes)
+	{
+		if ($Pref::Server::Ropes::MaxPlayerRopes == 1)
+			commandToClient(%client, 'CenterPrint', "\c0You already have a rope", 2);
+		else
+			commandToClient(%client, 'CenterPrint', "\c0You already have " @ $Pref::Server::Ropes::MaxPlayerRopes @ " ropes", 2);
+		ServerPlay3D("ErrorSound", %hitPos);
+		return;
+	}
+
+	ServerPlay3D("BrickMoveSound", %hitPos);
 
 	if (%player.ropeToolPosA $= "")
 	{
@@ -155,7 +165,7 @@ package RopeToolPackage
 		if (!isObject(%client = %obj.client))
 			return;
 
-		if ($Pref::Ropes::ToolAdminOnly && !%client.isAdmin)
+		if ($Pref::Server::Ropes::ToolAdminOnly && !%client.isAdmin)
 		{
 			commandToClient(%client, 'centerPrint', "<font:Verdana:20>\c6Oops! The rope tool is admin only.", 5);
 			return;
