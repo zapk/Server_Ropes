@@ -57,3 +57,10 @@ Download Server_Ropes.zip from the [latest release](https://github.com/zapk/Serv
 	- Clears ALL ropes, or just the provided BL_ID's ropes.
 - **getRopeCount**("bl_id or empty string");
 	- Returns the number of ALL ropes, or just the provided BL_ID's ropes.
+
+## Credits
+- [Zapk](https://github.com/zapk) - Server scripts
+- [Zeblote](https://github.com/zeblote) - Bottom-print design
+- [Wrapperup](https://github.com/wrapperup) - Cylinder DTS, \_aimRope function
+- [Port](https://github.com/qoh) - Something probably
+- **Trader:** Axis rotation functions
