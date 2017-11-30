@@ -29,7 +29,7 @@ function ropeToolImage::onHitObject(%this, %player, %slot, %hitObj, %hitPos, %hi
 	if (!isObject(%client = %player.client))
 		return;
 
-	if (getRopeCount(%client.getBLID()) >= $Pref::Server::Ropes::MaxPlayerRopes)
+	if (!%client.isAdmin && getRopeCount(%client.getBLID()) >= $Pref::Server::Ropes::MaxPlayerRopes)
 	{
 		if ($Pref::Server::Ropes::MaxPlayerRopes == 1)
 			commandToClient(%client, 'CenterPrint', "\c0You already have a rope", 2);
