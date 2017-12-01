@@ -34,24 +34,16 @@ if(isFile("Add-Ons/System_ReturnToBlockland/server.cs") && !$RTB::Hooks::ServerC
 	exec("Add-Ons/System_ReturnToBlockland/hooks/serverControl.cs");
 }
 
-RTB_registerPref("Slacked Rope Shapes", "Ropes", "Pref::Server::Ropes::Iterations", "int 1 40", "Server_Ropes", 20, 0, 0);
+RTB_registerPref("Slacked Rope Shapes", "Ropes", "Pref::Server::Ropes::Iterations", "int 2 40", "Server_Ropes", 10, 0, 0);
 RTB_registerPref("Rope Tool Admin Only", "Ropes", "Pref::Server::Ropes::ToolAdminOnly", "bool", "Server_Ropes", true, 0, 0);
 RTB_registerPref("Max Ropes for Non-Admins", "Ropes", "Pref::Server::Ropes::MaxPlayerRopes", "int 1 1000", "Server_Ropes", 64, 0, 0);
-
-datablock StaticShapeData(RopeCylinder)
-{
-	shapeFile = "./res/rope.dts";
-};
-
-datablock StaticShapeData(RopeCylinderNoCol)
-{
-	shapeFile = "./res/ropeNoCol.dts";
-};
+RTB_registerPref("Rope Vertices", "Ropes", "Pref::Server::Ropes::Vertices", "int 4 8", "Server_Ropes", 8, 0, 0);
 
 exec("./math.cs");
 exec("./manager.cs");
 exec("./ropetool.cs");
 exec("./commands.cs");
+exec("./datablocks.cs");
 
 function clearRopes(%bl_id)
 {
@@ -129,12 +121,13 @@ function _getRopeGroup(%group, %bl_id, %creationData)
 
 function _getNewRope(%diameter, %color, %group, %isNoCol)
 {
+	%dbName = "Rope" @ mClamp($Pref::Server::Ropes::Vertices, 4, 8) @ (%isNoCol ? "Ghost" : "");
 	%rope = new StaticShape()
 	{
 		position = "0 0 0";
 		rotation = "0 0 0";
 		scale = %diameter SPC %diameter SPC %diameter;
-		dataBlock = %isNoCol ? RopeCylinderNoCol : RopeCylinder;
+		dataBlock = %dbName;
 		canSetIFLs = false;
 		diameter = %diameter;
 		isRope = true;
@@ -258,7 +251,10 @@ package RopePackage
 
 		if (%player.client.getBLID() !$= (%bl_id = %hitObj.getGroup().bl_id))
 		{
-			commandToClient(%player.client, 'CenterPrint', "\c1BL_ID " @ %bl_id @ "\c0 does not trust you enough to do that", 1);
+			if (isObject("BrickGroup_" @ %bl_id))
+				%player.client.sendTrustFailureMessage("BrickGroup_" @ %bl_id);
+			else
+				commandToClient(%player.client, 'CenterPrint', "\c1BL_ID: " @ %bl_id @ "\c0 does not trust you enough to do that", 1);
 		}
 		else
 		{

@@ -29,6 +29,16 @@ function ropeToolImage::onHitObject(%this, %player, %slot, %hitObj, %hitPos, %hi
 	if (!isObject(%client = %player.client))
 		return;
 
+	if (isObject(%hitObj))
+	{
+		if (%hitObj.getType() & $TypeMasks::FxBrickAlwaysObjectType && getTrustLevel(%client, %hitObj) < $TrustLevel::BuildOn)
+		{
+			%client.sendTrustFailureMessage(%hitObj.getGroup());
+			ServerPlay3D("ErrorSound", %hitPos);
+			return;
+		}
+	}
+
 	if (!%client.isAdmin && getRopeCount(%client.getBLID()) >= $Pref::Server::Ropes::MaxPlayerRopes)
 	{
 		if ($Pref::Server::Ropes::MaxPlayerRopes == 1)
@@ -145,7 +155,7 @@ function GameConnection::updateRopeToolBP(%client)
 
 	%msg = "<font:Arial:22>\c6Rope Tool\n";
 	%msg = %msg @ "<font:Verdana:16>\c6Slack: \c3" @ %client.ropeToolSlack @ " \c6[Brick Fwd/Back]<just:right>\c6" @ %tut @ " \n<just:left>";
-	%msg = %msg @ "\c6Diameter: \c3" @ %client.ropeToolDiameter @ " \c6[Brick Left/Right]\n";
+	%msg = %msg @ "\c6Size: \c3" @ %client.ropeToolDiameter @ " \c6[Brick Left/Right]\n";
 	%msg = %msg @ "\c6Color: <font:impact:20><color:" @ %colHex @ ">|||||<font:Verdana:16> \c6[Paint Color]\n";
 
 	commandToClient(%client, 'BottomPrint', %msg, 0, true);
@@ -174,7 +184,7 @@ package RopeToolPackage
 		%obj.ropeToolAuthed = true;
 		%obj.ropeToolPosA = "";
 
-		if (%client.ropeToolSlack $= "") %client.ropeToolSlack = 2;
+		if (%client.ropeToolSlack $= "") %client.ropeToolSlack = 0.0;
 		if (%client.ropeToolDiameter $= "") %client.ropeToolDiameter = 0.2;
 
 		%client.updateRopeToolBP();
@@ -204,9 +214,9 @@ package RopeToolPackage
 		} else if (%x < 0) {
 			%client.ropeToolSlack = mClampF(%client.ropeToolSlack - 0.5, 0, 50);
 		} else if (%y > 0) {
-			%client.ropeToolDiameter = mClampF(%client.ropeToolDiameter - 0.05, 0.05, 2.0);
+			%client.ropeToolDiameter = mClampF(%client.ropeToolDiameter - 0.05, 0.05, 4.0);
 		} else if (%y < 0) {
-			%client.ropeToolDiameter = mClampF(%client.ropeToolDiameter + 0.05, 0.05, 2.0);
+			%client.ropeToolDiameter = mClampF(%client.ropeToolDiameter + 0.05, 0.05, 4.0);
 		}
 
 		%client.updateRopeToolBP();
@@ -262,10 +272,9 @@ package RopeToolPackage
 				if (isObject(%player = %client.player))
 				%player.playThread(3, "undo");
 
-				for (%i = 0; %i < %group.getCount(); %i++)
-				{
-					serverPlay3D("BrickBreakSound", %group.getObject(%i).getPosition());
-				}
+				%mid = mFloor(%group.getCount() / 2);
+				serverPlay3D("BrickBreakSound", %group.getObject(%mid).getPosition());
+
 				%group.delete();
 			}
 
