@@ -43,6 +43,8 @@ Download Server_Ropes.zip from the [latest release](https://github.com/zapk/Serv
 	-	Whether or not only admins should have access to the Rope Tool.
 - **Max Ropes for Non-Admins**
 	-	Max amount of ropes players can create with the Rope Tool.
+- **Rope Vertices**
+	- How many edges the rope cylinders should have.
 
 ## Media
 [![Video](https://i.imgur.com/th9viQK.png)](https://www.youtube.com/watch?v=ul0RnL0D1xs)
