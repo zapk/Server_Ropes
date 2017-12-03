@@ -1,5 +1,5 @@
 # Server_Ropes
-[![GitHub release](https://img.shields.io/github/release/zapk/Server_Ropes.svg)]() [![GitHub issues](https://img.shields.io/github/issues/zapk/Server_Ropes.svg)](https://github.com/zapk/Server_Ropes/issues)
+[![GitHub release](https://img.shields.io/github/release/zapk/Server_Ropes.svg)]() [![GitHub issues](https://img.shields.io/github/issues/zapk/Server_Ropes.svg)](https://github.com/zapk/Server_Ropes/issues) [![GitHub downloads](https://img.shields.io/github/downloads/zapk/Server_Ropes/total.svg)]()
 
 Aesthetic ropes for [Blockland](http://blockland.us/).
 
